@@ -506,12 +506,10 @@ function handleFiles(files){
       vel.addEventListener('pause',()=>{const i=tracks.indexOf(track);track.playing=false;if(i!==-1)renderTrack(i);});
       tracks.push(track);
     }else{
-      const audio=new Audio(url);audio.crossOrigin='anonymous';
+      const audio=new Audio();
+      audio.src=url;
       const src=audioCtx.createMediaElementSource(audio);
-      const gain=audioCtx.createGain();gain.gain.value=1;
-      src.connect(bassEQ);gain.connect(bassEQ); // slight rewire: per-track gain into bassEQ
-      // Actually: src -> trackGain -> bassEQ chain
-      src.disconnect();const tGain=audioCtx.createGain();tGain.gain.value=1;
+      const tGain=audioCtx.createGain();tGain.gain.value=1;
       src.connect(tGain);tGain.connect(bassEQ);
       const track={type:'audio',name:f.name.replace(/\.[^/.]+$/,''),audio,gainNode:tGain,looping:false,volume:100,duration:'--:--',playing:false};
       audio.addEventListener('loadedmetadata',()=>{track.duration=fmt(audio.duration);const i=tracks.indexOf(track);if(i!==-1){renderTrack(i);renderSoundboard();}});
@@ -734,7 +732,7 @@ function openTabSwitcher(){
     card.className='ts-card'+(entry.isApp?' ts-app':'')+(decoyCount===entry.decoyIdx&&!entry.isApp?' active-decoy':'');
     const imgHtml = entry.isApp
       ? '<span style="font-size:1.4rem">🎵</span>'
-      : '<img src="'+entry.icon+'" onerror="this.style.display='none'" alt="">';
+      : '<img src="'+entry.icon+'" alt="">';
     const keyLabel = i+1 <= 9 ? '<span class="ts-card-key">'+(i+1)+'</span>' : '';
     card.innerHTML = keyLabel + imgHtml +
       '<span class="ts-card-name">'+entry.title+'</span>'+
@@ -1284,12 +1282,8 @@ function addLibrarySound(i) {
   // Convert buffer to WAV blob for storage as a real "track"
   const wavBlob = bufferToWav(sound._buffer);
   const url = URL.createObjectURL(wavBlob);
-  const audio = new Audio(url);
-  audio.crossOrigin = 'anonymous';
-  // Wait for it to load enough to play
-  audio.addEventListener('canplay', function onCan() {
-    audio.removeEventListener('canplay', onCan);
-  }, {once: true});
+  const audio = new Audio();
+  audio.src = url;
 
   const srcNode = audioCtx.createMediaElementSource(audio);
   const tGain = audioCtx.createGain();
